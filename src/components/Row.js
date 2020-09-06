@@ -1,26 +1,22 @@
 import React, { useEffect, useState } from "react";
 import axios from "../axios";
 import "./Row.css";
-// {
-//   backdrop_path: "/mGVrXeIjyecj6TKmwPVpHlscEmw.jpg";
-//   first_air_date: "2019-07-25";
-//   genre_ids: (2)[(10759, 10765)];
-//   id: 76479;
-//   name: "The Boys";
-//   origin_country: ["US"];
-//   original_language: "en";
-//   original_name: "The Boys";
-//   overview: "A group of vigilantes known informally as “The Boys” set out to take down corrupt superheroes with no more than blue-collar grit and a willingness to fight dirty.";
-//   popularity: 1450.208;
-//   poster_path: "/mY7SeH4HFFxW1hiI6cWuwCRKptN.jpg";
-//   vote_average: 8.3;
-//   vote_count: 1197;
-// }
+import YouTube from "react-youtube";
+import movieTrailer from "movie-trailer";
 
 const Row = ({ title, fetchUrl, portrait }) => {
   const [data, setData] = useState(null);
+  const [trailerUrl, setTrailerUrl] = useState("");
 
   const posterBaseUrl = "https://image.tmdb.org/t/p/original/";
+
+  const opts = {
+    height: "390",
+    width: "100%",
+    playerVars: {
+      autoplay: 1,
+    },
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -31,7 +27,19 @@ const Row = ({ title, fetchUrl, portrait }) => {
     fetchData();
   }, [fetchUrl]);
 
-  console.log(data);
+  const handleClick = (movie) => {
+    if (trailerUrl) {
+      setTrailerUrl("");
+    } else {
+      movieTrailer(movie?.name || movie?.title || "")
+        .then((url) => {
+          const urlParams = new URLSearchParams(new URL(url).search);
+          const id = urlParams.get("v");
+          setTrailerUrl(id);
+        })
+        .catch((error) => console.log(error));
+    }
+  };
 
   if (data === null) return <p>loading...</p>;
 
@@ -47,9 +55,11 @@ const Row = ({ title, fetchUrl, portrait }) => {
               portrait ? movie["poster_path"] : movie["backdrop_path"]
             }`}
             alt={movie.name || movie.title}
+            onClick={() => handleClick(movie)}
           />
         ))}
       </div>
+      {trailerUrl && <YouTube videoId={trailerUrl} opts={opts} />}
     </div>
   );
 };
